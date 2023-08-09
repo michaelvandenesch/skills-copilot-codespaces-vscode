@@ -1,42 +1,28 @@
 //create web server
+//create web server
+var http = require('http');
 var express = require('express');
-//create a router object
-var router = express.Router();
-//import the model
-var Comment = require('../models/comment');
-//import the auth middleware
-var auth = require('../middleware/auth');
+var app = express();
+var server = http.createServer(app);
+var path = require('path');
+var bodyParser = require('body-parser');
+var mongoose = require('mongoose');
+var Schema = mongoose.Schema;
+var port = 3000;
+var comments = require('./routes/comments');
 
-//import the auth middleware
-var auth = require('../middleware/auth');
+//connect to mongoDB
+mongoose.connect('mongodb://localhost/commentDB');
 
-//GET /comments
-router.get('/', auth, function(req, res, next){
-    //use the Comment model to fetch a list of comments from the database
-    Comment.find(function(err, comments){
-        if(err){
-            console.log(err);
-            res.end(err);
-            return;
-        }
-        //no error so send the comments to the index view
-        res.render('comments/index',{
-            comments: comments,
-            user: req.user
-        });
-    });
+//middleware
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended: true}));
+
+//routes
+app.use('/comments', comments);
+
+//start server
+server.listen(port, function() {
+  console.log('Server is listening on port ', port);
 });
-
-//GET /comments/add
-router.get('/add', auth, function(req, res, next){
-    res.render('comments/add', {
-        user: req.user
-    });
-});
-
-//POST /comments/add
-router.post('/add', auth, function(req, res, next){
-    Comment.create({
-        content: req.body.content,
-
-
